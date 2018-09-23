@@ -504,8 +504,8 @@ void NMainMenuBar::setupHelpMenu() {
     QFont f = global.getGuiFont(QFont());
     helpMenu->setFont(f);
 
-    openProjectWebPageAction = new QAction(tr("&Project wiki"), this);
-    openProjectWebPageAction->setToolTip(tr("Open NixNote wiki page with help/documentation/contact"));
+    openProjectWebPageAction = new QAction(tr("PPA Update"), this);
+    openProjectWebPageAction->setToolTip(tr("Open PPA Update info page"));
     connect(openProjectWebPageAction, SIGNAL(triggered()), this, SLOT(onOpenProjectWebPage()));
     helpMenu->addAction(openProjectWebPageAction);
 
@@ -570,7 +570,7 @@ void NMainMenuBar::setupShortcut(QAction *action, QString text) {
 }
 
 void NMainMenuBar::onOpenProjectWebPage() {
-    QDesktopServices::openUrl(QUrl(NN_GITHUB_WIKI_URL));
+    QDesktopServices::openUrl(QUrl("https://github.com/robert7/nixnote2/wiki/NixNote-PPA#ppa-url-change-201809"));
 }
 
 void NMainMenuBar::onOpenGettingStartedWebPage() {

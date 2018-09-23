@@ -3726,3 +3726,14 @@ void NixNote::onExportAsPdfReady(bool) {
     printer.setOutputFileName(file);
     pdfExportWindow->print(&printer);
 }
+
+
+void NixNote::showAnnouncementMessage() {
+    QMessageBox::critical(
+            this, tr("Announcement"),
+            "You installed the application from a package repository, which has been moved.\n\n"
+            "Please open menu Help/PPA Update - this will display instructions how to switch to the new PPA."
+            "\nYou can do repository switch at any time later."
+            "\n\n"
+            "Sorry for additional inconvenience..");
+}
