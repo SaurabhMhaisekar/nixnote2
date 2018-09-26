@@ -46,8 +46,8 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 extern Global global;
 
 //* Constructor
-NTableView::NTableView(QWidget *parent) :
-    QTableView(parent) {
+NTableView::NTableView(QWidget *parent) : QTableView(parent)
+{
     QLOG_TRACE() << "Entering NTableView constructor";
     this->setSelectionBehavior(QAbstractItemView::SelectRows);
     this->verticalHeader()->setVisible(false);
@@ -211,7 +211,7 @@ NTableView::NTableView(QWidget *parent) :
 
     contextMenu->addSeparator();
 
-    addNoteAction = new QAction(tr("Add Note"), this);
+    addNoteAction = new QAction(tr("New Note"), this);
     contextMenu->addAction(addNoteAction);
     connect(addNoteAction, SIGNAL(triggered()), this, SLOT(createNewNote()));
     addNoteAction->setFont(global.getGuiFont(font()));
@@ -257,7 +257,6 @@ NTableView::NTableView(QWidget *parent) :
     reminderMarkCompletedAction->setFont(global.getGuiFont(font()));
     connect(reminderMarkCompletedAction, SIGNAL(triggered()), this, SLOT(markReminderCompleted()));
 
-
     pinNoteAction = new QAction(tr("Pin Note"), this);
     contextMenu->addAction(pinNoteAction);
     pinNoteAction->setFont(global.getGuiFont(font()));
@@ -272,7 +271,6 @@ NTableView::NTableView(QWidget *parent) :
     contextMenu->addAction(mergeNotesAction);
     mergeNotesAction->setFont(global.getGuiFont(font()));
     connect(mergeNotesAction, SIGNAL(triggered()), this, SLOT(mergeNotes()));
-
 
     createTableOfContentsAction = new QAction(tr("Create Table of Contents"), this);
     contextMenu->addAction(createTableOfContentsAction);
@@ -339,14 +337,12 @@ NTableView::NTableView(QWidget *parent) :
     if (css != "")
         this->setStyleSheet(css);
 
-
     QLOG_TRACE() << "Exiting NTableView constructor";
-
 }
 
-
 //* Destructor
-NTableView::~NTableView() {
+NTableView::~NTableView()
+{
     delete dateDelegate;
     delete blankNumber;
     delete kbNumber;
@@ -355,13 +351,13 @@ NTableView::~NTableView() {
     delete this->proxy;
 }
 
-
-NoteModel *NTableView::model() {
+NoteModel *NTableView::model()
+{
     return noteModel;
 }
 
-
-void NTableView::contextMenuEvent(QContextMenuEvent *event) {
+void NTableView::contextMenuEvent(QContextMenuEvent *event)
+{
     deleteNoteAction->setEnabled(false);
     QList<qint32> lids;
     getSelectedLids(lids);
@@ -370,27 +366,33 @@ void NTableView::contextMenuEvent(QContextMenuEvent *event) {
     // Deterimne if the merge notes menu option is visible.
     // If it is a read-only notebook or if the number of selected notes
     // is < 1 then we can't merge.
-    if (lids.size() > 1) {
+    if (lids.size() > 1)
+    {
         mergeNotesAction->setVisible(true);
         NoteTable nTable(global.db);
         NotebookTable bookTable(global.db);
-        for (int i = 0; i < lids.size(); i++) {
+        for (int i = 0; i < lids.size(); i++)
+        {
             qint32 notebookLid = nTable.getNotebookLid(lids[i]);
-            if (bookTable.isReadOnly(notebookLid)) {
+            if (bookTable.isReadOnly(notebookLid))
+            {
                 mergeNotesAction->setVisible(false);
                 i = lids.size();
             }
         }
     }
-    if (lids.size() > 0) {
+    if (lids.size() > 0)
+    {
         bool readOnlySelected = false;
-        for (int i = 0; i < lids.size(); i++) {
+        for (int i = 0; i < lids.size(); i++)
+        {
             Note n;
             NotebookTable bTable(global.db);
             NoteTable nTable(global.db);
             nTable.get(n, lids[i], false, false);
             qint32 notebookLid = bTable.getLid(n.notebookGuid);
-            if (bTable.isReadOnly(notebookLid)) {
+            if (bTable.isReadOnly(notebookLid))
+            {
                 readOnlySelected = true;
                 i = lids.size();
             }
@@ -406,11 +408,11 @@ void NTableView::contextMenuEvent(QContextMenuEvent *event) {
     contextMenu->popup(event->globalPos());
 }
 
-
 // update specific one cell
 // if content did not really change, then invalid QVariant may be passed here
 // useful for compound fields
-void NTableView::refreshCell(qint32 lid, int cell, QVariant data) {
+void NTableView::refreshCell(qint32 lid, int cell, QVariant data)
+{
     //QLOG_DEBUG() << "refreshCell: lid=" << lid << ", col=" << cell << ", data=" << data;
 
     SelectionMode mode = selectionMode();
@@ -424,23 +426,29 @@ void NTableView::refreshCell(qint32 lid, int cell, QVariant data) {
     // Check the highlighted LIDs from the history selection.
     // set to model ONLY, if data is valid
     // so if we pass invalid "data" - then data is unchanged
-    if (proxy->lidMap->contains(lid)) {
+    if (proxy->lidMap->contains(lid))
+    {
         int rowLocation = proxy->lidMap->value(lid);
-        if (rowLocation >= 0) {
+        if (rowLocation >= 0)
+        {
             QModelIndex modelIndex = model()->index(rowLocation, cell);
-            if (data.isValid()) {
+            if (data.isValid())
+            {
                 // set new data
                 model()->setData(modelIndex, data);
                 //QLOG_DEBUG() << "refreshCell: lid=" << lid << ", updating at rowLocation=" << rowLocation << "data="
                 //             << data;
-            } else {
+            }
+            else
+            {
                 // just set original data, forcing refresh
                 // TODO this is really bad solution - need to fix later
                 // we reread the original data and append space to force refresh
                 // as the data is not really saved anywhere from the table itself, it will not matter
                 // buts really wild :(
                 QVariant originalData = model()->sourceData(modelIndex, Qt::DisplayRole);
-                if (originalData.type() == QVariant::String) {
+                if (originalData.type() == QVariant::String)
+                {
                     originalData = originalData.toString() + QString(" ");
                 }
 
@@ -454,7 +462,8 @@ void NTableView::refreshCell(qint32 lid, int cell, QVariant data) {
     // We need to re-select all the rows.  The selection model is
     // temporarily set to multi selection, so it allows multiple rows.
     setSelectionMode(QAbstractItemView::MultiSelection);
-    for (int i = 0; i < selectedLids.size(); i++) {
+    for (int i = 0; i < selectedLids.size(); i++)
+    {
         int sourceRow = proxy->lidMap->value(selectedLids[i]);
         QModelIndex sourceIndex = model()->index(sourceRow, NOTE_TABLE_LID_POSITION);
         QModelIndex proxyIndex = proxy->mapFromSource(sourceIndex);
@@ -467,16 +476,17 @@ void NTableView::refreshCell(qint32 lid, int cell, QVariant data) {
     //    model()->blockSignals(false);
 }
 
-
 // refresh all data from underlying database source
-void NTableView::refreshData() {
+void NTableView::refreshData()
+{
     QLOG_TRACE() << "Getting valid lids in filter";
 
     // Save the current selection in case we need it later
     priorSelectedLids.clear();
     getSelectedLids(priorSelectedLids);
     priorLidOrder.clear();
-    for (int i = 0; i < proxy->rowCount(); i++) {
+    for (int i = 0; i < proxy->rowCount(); i++)
+    {
         QModelIndex idx = proxy->index(i, NOTE_TABLE_LID_POSITION);
         priorLidOrder.append(idx.data().toInt());
     }
@@ -484,7 +494,8 @@ void NTableView::refreshData() {
     NSqlQuery sql(global.db);
     sql.exec("select lid from filter");
     proxy->lidMap->clear();
-    while (sql.next()) {
+    while (sql.next())
+    {
         qint32 lid = sql.value(0).toInt();
         proxy->lidMap->insert(lid, 0);
     }
@@ -498,7 +509,8 @@ void NTableView::refreshData() {
     refreshSelection();
     if (this->tableViewHeader->isThumbnailVisible())
         verticalHeader()->setDefaultSectionSize(100);
-    else {
+    else
+    {
         QFont f = font();
         global.getGuiFont(f);
         //f.setPointSize(global.defaultGuiFontSize);
@@ -508,9 +520,9 @@ void NTableView::refreshData() {
     }
 }
 
-
 // The note list changed, so we need to reselect any valid notes.
-void NTableView::refreshSelection() {
+void NTableView::refreshSelection()
+{
 
     this->blockSignals(true);
     bool lidHidden = isColumnHidden(NOTE_TABLE_LID_POSITION);
@@ -525,13 +537,17 @@ void NTableView::refreshSelection() {
 
     QLOG_TRACE() << "Highlighting selected rows after refresh";
     SelectionMode mode = selectionMode();
-    if (!criteria->isLidSet()) {
+    if (!criteria->isLidSet())
+    {
         setSelectionMode(QAbstractItemView::MultiSelection);
         // Check the highlighted LIDs from the history selection.
-        for (int i = 0; i < historyList.size(); i++) {
-            if (proxy->lidMap->contains(historyList[i])) {
+        for (int i = 0; i < historyList.size(); i++)
+        {
+            if (proxy->lidMap->contains(historyList[i]))
+            {
                 int rowLocation = proxy->lidMap->value(historyList[i]);
-                if (rowLocation >= 0) {
+                if (rowLocation >= 0)
+                {
                     QModelIndex modelIndex = model()->index(rowLocation, NOTE_TABLE_LID_POSITION);
                     QModelIndex proxyIndex = proxy->mapFromSource(modelIndex);
                     selectRow(proxyIndex.row());
@@ -540,9 +556,11 @@ void NTableView::refreshSelection() {
         }
     }
 
-    if (criteria->isLidSet() && proxy->lidMap->contains(criteria->getLid())) {
+    if (criteria->isLidSet() && proxy->lidMap->contains(criteria->getLid()))
+    {
         int rowLocation = proxy->lidMap->value(criteria->getLid());
-        if (rowLocation >= 0) {
+        if (rowLocation >= 0)
+        {
             QModelIndex modelIndex = model()->index(rowLocation, NOTE_TABLE_LID_POSITION);
             QModelIndex proxyIndex = proxy->mapFromSource(modelIndex);
             selectRow(proxyIndex.row());
@@ -554,8 +572,10 @@ void NTableView::refreshSelection() {
     // Make sure at least one thing is selected
     QLOG_TRACE() << "Selecting one item if nothing else is selected";
     QModelIndexList l = selectedIndexes();
-    if (l.size() == 0) {
-        if (!criteria->isLidSet() || !proxy->lidMap->contains(criteria->getLid())) {
+    if (l.size() == 0)
+    {
+        if (!criteria->isLidSet() || !proxy->lidMap->contains(criteria->getLid()))
+        {
             qint32 rowLid;
             rowLid = selectAnyNoteFromList();
             criteria->setLid(rowLid);
@@ -575,47 +595,53 @@ void NTableView::refreshSelection() {
     this->blockSignals(false);
 }
 
-
 // Listen for mouse press events.  This helps determine if we should
 // open a note in a new window or the existing window
-void NTableView::mouseReleaseEvent(QMouseEvent *e) {
+void NTableView::mouseReleaseEvent(QMouseEvent *e)
+{
     QTableView::mouseReleaseEvent(e);
-    if (e->button() == Qt::RightButton) {
-    } else if (e->button() == Qt::LeftButton) {
+    if (e->button() == Qt::RightButton)
+    {
+    }
+    else if (e->button() == Qt::LeftButton)
+    {
         this->openSelectedLids(false);
-    } else if (e->button() == Qt::MidButton) {
+    }
+    else if (e->button() == Qt::MidButton)
+    {
         //int v = global.getMiddleClickAction();
         //if (v == MOUSE_MIDDLE_CLICK_NEW_WINDOW)
-            this->openNoteExternalWindowTriggered();
+        this->openNoteExternalWindowTriggered();
         //else
         //    this->openSelectedLids(true);
     }
 }
 
-
 // Listen for up & down arrows
-void NTableView::keyPressEvent(QKeyEvent *event) {
+void NTableView::keyPressEvent(QKeyEvent *event)
+{
     QTableView::keyPressEvent(event);
     if (event->key() == Qt::Key_Up || event->key() == Qt::Key_Down ||
         event->key() == Qt::Key_PageUp || event->key() == Qt::Key_PageDown)
         this->openSelectedLids(false);
-
 }
 
-
 // Open a selected note.  This is not done via the context menu.
-void NTableView::openSelectedLids(bool newWindow) {
+void NTableView::openSelectedLids(bool newWindow)
+{
 
     QList<qint32> lids;
     getSelectedLids(lids);
-    if (lids.size() == 0) {
+    if (lids.size() == 0)
+    {
         QLOG_DEBUG() << "No selected lids";
         return;
     }
 
     // First, find out if we're already viewing history.  If we are we
     // chop off the end of the history & start a new one
-    if (global.filterPosition + 1 < global.filterCriteria.size()) {
+    if (global.filterPosition + 1 < global.filterCriteria.size())
+    {
         while (global.filterPosition + 1 < global.filterCriteria.size())
             delete global.filterCriteria.takeAt(global.filterCriteria.size() - 1);
     }
@@ -629,14 +655,15 @@ void NTableView::openSelectedLids(bool newWindow) {
     global.filterCriteria.push_back(newFilter);
     global.filterPosition++;
 
-
-    if (lids.size() > 0) {
+    if (lids.size() > 0)
+    {
         emit openNote(newWindow);
     }
 }
 
 // Restore notes from the trash
-void NTableView::restoreSelectedNotes() {
+void NTableView::restoreSelectedNotes()
+{
     QList<qint32> lids;
     this->getSelectedLids(lids);
     if (lids.size() == 0)
@@ -646,7 +673,8 @@ void NTableView::restoreSelectedNotes() {
     NSqlQuery sql(global.db);
     //transaction.exec("begin");
     sql.prepare("Delete from filter where lid=:lid");
-    for (int i = 0; i < lids.size(); i++) {
+    for (int i = 0; i < lids.size(); i++)
+    {
         ntable.restoreNote(lids[i], true);
         sql.bindValue(":lid", lids[i]);
         sql.exec();
@@ -657,9 +685,9 @@ void NTableView::restoreSelectedNotes() {
     emit(notesRestored(lids));
 }
 
-
 // Delete the selected notes
-void NTableView::deleteSelectedNotes() {
+void NTableView::deleteSelectedNotes()
+{
     QList<qint32> lids;
     this->getSelectedLids(lids);
     if (lids.size() == 0)
@@ -671,11 +699,11 @@ void NTableView::deleteSelectedNotes() {
     bool expunged = false;
     typeDelete = tr("Delete ");
 
-    if (f->isDeletedOnlySet() && f->getDeletedOnly()) {
+    if (f->isDeletedOnlySet() && f->getDeletedOnly())
+    {
         typeDelete = tr("Permanently delete ");
         expunged = true;
     }
-
 
     if (lids.size() == 1)
         msg = typeDelete + tr("selected note?");
@@ -694,10 +722,11 @@ void NTableView::deleteSelectedNotes() {
 
     NoteTable ntable(global.db);
     NSqlQuery sql(global.db);
-//    NSqlQuery transaction(*global.db);
+    //    NSqlQuery transaction(*global.db);
     //transaction.exec("begin");
     sql.prepare("Delete from filter where lid=:lid");
-    for (int i = 0; i < lids.size(); i++) {
+    for (int i = 0; i < lids.size(); i++)
+    {
         ntable.deleteNote(lids[i], true);
         if (expunged)
             ntable.expunge(lids[i]);
@@ -711,9 +740,9 @@ void NTableView::deleteSelectedNotes() {
     emit(notesDeleted(lids, expunged));
 }
 
-
 // Get a list of selected lids from the table
-void NTableView::getSelectedLids(QList<qint32> &lids) {
+void NTableView::getSelectedLids(QList<qint32> &lids)
+{
 
     lids.clear();
 
@@ -725,19 +754,22 @@ void NTableView::getSelectedLids(QList<qint32> &lids) {
     // way since I can't determine exactly how many rows are
     // selected.
     QModelIndexList l = selectedIndexes();
-    for (int i = 0; i < l.size(); i++) {
+    for (int i = 0; i < l.size(); i++)
+    {
         qint32 currentLid = l.at(i).sibling(l.at(i).row(), NOTE_TABLE_LID_POSITION).data().toInt();
-        if (!lids.contains(currentLid)) {
+        if (!lids.contains(currentLid))
+        {
             lids.append(currentLid);
         }
     }
 }
 
-
 // Check if any specific lid is selected
-bool NTableView::isLidSelected(qint32 lid) {
+bool NTableView::isLidSelected(qint32 lid)
+{
     QModelIndexList l = selectedIndexes();
-    for (int i = 0; i < l.size(); i++) {
+    for (int i = 0; i < l.size(); i++)
+    {
         qint32 currentLid = l.at(i).sibling(l.at(i).row(), NOTE_TABLE_LID_POSITION).data().toInt();
         if (currentLid == lid)
             return true;
@@ -745,17 +777,20 @@ bool NTableView::isLidSelected(qint32 lid) {
     return false;
 }
 
-
 // Pick a note, any note, to open.  This is normally done to force any note to be opened if nothing is currently
 // selected.
-qint32 NTableView::selectAnyNoteFromList() {
+qint32 NTableView::selectAnyNoteFromList()
+{
 
     bool found = false;
-    if (priorSelectedLids.size() > 0) {
+    if (priorSelectedLids.size() > 0)
+    {
         int lidPosition = -1;
-        for (int i = 0; i < priorLidOrder.size() && !found; i++) {
+        for (int i = 0; i < priorLidOrder.size() && !found; i++)
+        {
             qint32 lid = priorLidOrder[i];
-            if (lid == priorSelectedLids[0]) {
+            if (lid == priorSelectedLids[0])
+            {
                 found = true;
                 lidPosition = i;
             }
@@ -763,13 +798,18 @@ qint32 NTableView::selectAnyNoteFromList() {
 
         // If we found the lid we are looking for, then start looking lower in the list for
         // the next valid one
-        for (int i = lidPosition; i < priorLidOrder.size() && found; i++) {
-            if (proxy->lidMap->contains(priorLidOrder[i])) {
-                for (int j = 0; j < proxy->rowCount(); j++) {
+        for (int i = lidPosition; i < priorLidOrder.size() && found; i++)
+        {
+            if (proxy->lidMap->contains(priorLidOrder[i]))
+            {
+                for (int j = 0; j < proxy->rowCount(); j++)
+                {
                     QModelIndex idx = proxy->index(j, NOTE_TABLE_LID_POSITION);
                     qint32 rowLid = idx.data().toInt();
-                    if (rowLid == priorLidOrder[i]) {
-                        QLOG_DEBUG() << "" << "Selecting row " << j << "lid: " << rowLid;
+                    if (rowLid == priorLidOrder[i])
+                    {
+                        QLOG_DEBUG() << ""
+                                     << "Selecting row " << j << "lid: " << rowLid;
                         selectRow(j);
                         this->blockSignals(true);
                         emit openNote(false);
@@ -781,13 +821,18 @@ qint32 NTableView::selectAnyNoteFromList() {
         }
 
         // We didn't find one lower in the list, so start looking up.
-        for (int i = lidPosition; i >= 0 && found; i--) {
-            if (proxy->lidMap->contains(priorLidOrder[i])) {
-                for (int j = 0; j < proxy->rowCount(); j++) {
+        for (int i = lidPosition; i >= 0 && found; i--)
+        {
+            if (proxy->lidMap->contains(priorLidOrder[i]))
+            {
+                for (int j = 0; j < proxy->rowCount(); j++)
+                {
                     QModelIndex idx = proxy->index(j, NOTE_TABLE_LID_POSITION);
                     qint32 rowLid = idx.data().toInt();
-                    if (rowLid == priorLidOrder[i]) {
-                        QLOG_DEBUG() << "" << "Selecting row " << j << "lid: " << rowLid;
+                    if (rowLid == priorLidOrder[i])
+                    {
+                        QLOG_DEBUG() << ""
+                                     << "Selecting row " << j << "lid: " << rowLid;
                         selectRow(j);
                         this->blockSignals(true);
                         emit openNote(false);
@@ -803,12 +848,16 @@ qint32 NTableView::selectAnyNoteFromList() {
     int rowCount = proxy->rowCount(QModelIndex());
     Qt::SortOrder so = this->tableViewHeader->sortIndicatorOrder();
 
-    if (so == Qt::AscendingOrder) {
-        for (int j = rowCount - 1; j >= 0; j--) {
+    if (so == Qt::AscendingOrder)
+    {
+        for (int j = rowCount - 1; j >= 0; j--)
+        {
             QModelIndex idx = proxy->index(j, NOTE_TABLE_LID_POSITION);
             qint32 rowLid = idx.data().toInt();
-            if (rowLid > 0) {
-                QLOG_DEBUG() << "" << "Selecting row " << j << "lid: " << rowLid;
+            if (rowLid > 0)
+            {
+                QLOG_DEBUG() << ""
+                             << "Selecting row " << j << "lid: " << rowLid;
                 selectRow(j);
                 this->blockSignals(true);
                 emit openNote(false);
@@ -818,12 +867,16 @@ qint32 NTableView::selectAnyNoteFromList() {
         }
     }
 
-    if (so == Qt::DescendingOrder) {
-        for (int j = 0; j <= rowCount; j++) {
+    if (so == Qt::DescendingOrder)
+    {
+        for (int j = 0; j <= rowCount; j++)
+        {
             QModelIndex idx = proxy->index(j, NOTE_TABLE_LID_POSITION);
             qint32 rowLid = idx.data().toInt();
-            if (rowLid > 0) {
-                QLOG_DEBUG() << "" << "Selecting row " << j << "lid: " << rowLid;
+            if (rowLid > 0)
+            {
+                QLOG_DEBUG() << ""
+                             << "Selecting row " << j << "lid: " << rowLid;
                 selectRow(j);
                 this->blockSignals(true);
                 emit openNote(false);
@@ -836,7 +889,8 @@ qint32 NTableView::selectAnyNoteFromList() {
 }
 
 // Copy (duplicate) a note
-void NTableView::copyNote() {
+void NTableView::copyNote()
+{
     // Make sure we save whatever we are currently viewing
     emit saveAllNotes();
 
@@ -848,7 +902,8 @@ void NTableView::copyNote() {
     NoteTable noteTable(global.db);
     qint32 saveLid = 0;
     QList<qint32> newLids;
-    for (int i = 0; i < lids.size(); i++) {
+    for (int i = 0; i < lids.size(); i++)
+    {
         saveLid = noteTable.duplicateNote(lids[i]);
         newLids.append(saveLid);
     }
@@ -866,17 +921,15 @@ void NTableView::copyNote() {
     refreshData();
 
     this->openNote(false);
-
 }
 
-
 // Copy a note link into the clipboard
-void NTableView::copyNoteLink() {
+void NTableView::copyNoteLink()
+{
     QList<qint32> lids;
     getSelectedLids(lids);
     if (lids.size() == 0)
         return;
-
 
     UserTable userTable(global.db);
     User user;
@@ -886,7 +939,8 @@ void NTableView::copyNoteLink() {
 
     if (user.id.isSet())
         userid = QVariant(user.id).toString();
-    else {
+    else
+    {
         syncneeded = true;
         userid = "0000";
     }
@@ -894,7 +948,8 @@ void NTableView::copyNoteLink() {
     QString shard;
     if (user.shardId.isSet())
         shard = user.shardId;
-    else {
+    else
+    {
         syncneeded = true;
         shard = "s0";
     }
@@ -902,22 +957,26 @@ void NTableView::copyNoteLink() {
     Note note;
     NoteTable ntable(global.db);
     QString lidUrl = "";
-    for (int i = 0; i < lids.size(); i++) {
+    for (int i = 0; i < lids.size(); i++)
+    {
         ntable.get(note, lids[i], false, false);
 
         QString guid = "";
         if (note.guid.isSet())
             guid = note.guid;
         QString localid;
-        if (!note.updateSequenceNum.isSet() || note.updateSequenceNum == 0) {
+        if (!note.updateSequenceNum.isSet() || note.updateSequenceNum == 0)
+        {
             syncneeded = true;
             localid = QString::number(lids[i]);
-        } else
+        }
+        else
             localid = guid;
 
         lidUrl = lidUrl + "evernote:///view/" + userid + "/" + shard + "/" + guid + "/" + localid + "/" + " ";
     }
-    if (syncneeded) {
+    if (syncneeded)
+    {
         QMessageBox msgBox;
         msgBox.setWindowTitle(tr("Unsynchronized Note"));
         msgBox.setText(
@@ -930,9 +989,9 @@ void NTableView::copyNoteLink() {
     QApplication::clipboard()->setText(lidUrl);
 }
 
-
 // Toggle columns hidden or visible
-void NTableView::toggleColumnVisible(int position, bool visible) {
+void NTableView::toggleColumnVisible(int position, bool visible)
+{
     setColumnHidden(position, !visible);
     if (this->tableViewHeader->isThumbnailVisible())
         verticalHeader()->setDefaultSectionSize(100);
@@ -940,9 +999,9 @@ void NTableView::toggleColumnVisible(int position, bool visible) {
         verticalHeader()->setDefaultSectionSize(QApplication::fontMetrics().height());
 }
 
-
 // Save which columns are visible so it can be restored on the next stat
-void NTableView::saveColumnsVisible() {
+void NTableView::saveColumnsVisible()
+{
     if (global.listView == Global::ListViewWide)
         global.settings->beginGroup(INI_GROUP_COL_HIDDEN_WIDE);
     else
@@ -1032,9 +1091,9 @@ void NTableView::saveColumnsVisible() {
     global.settings->endGroup();
 }
 
-
 // Set which columns are visible (used after restarting)
-void NTableView::setColumnsVisible() {
+void NTableView::setColumnsVisible()
+{
     if (global.listView == Global::ListViewWide)
         global.settings->beginGroup(INI_GROUP_COL_HIDDEN_WIDE);
     else
@@ -1123,7 +1182,7 @@ void NTableView::setColumnsVisible() {
     value = global.settings->value("reminderOrder", true).toBool();
     tableViewHeader->reminderOrderAction->setChecked(!value);
     //setColumnHidden(NOTE_TABLE_REMINDER_ORDER_POSITION, value);
-    setColumnHidden(NOTE_TABLE_REMINDER_ORDER_POSITION, true);  // Column hidden because it isn't really needed
+    setColumnHidden(NOTE_TABLE_REMINDER_ORDER_POSITION, true); // Column hidden because it isn't really needed
 
     value = global.settings->value("isPinned", true).toBool();
     tableViewHeader->pinnedAction->setChecked(!value);
@@ -1132,196 +1191,245 @@ void NTableView::setColumnsVisible() {
     global.settings->endGroup();
 }
 
-
 // Change the order of the columns (used after restarting)
-void NTableView::repositionColumns() {
+void NTableView::repositionColumns()
+{
     int from = horizontalHeader()->visualIndex(NOTE_TABLE_AUTHOR_POSITION);
     int to = global.getColumnPosition("noteTableAuthorPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_ALTITUDE_POSITION);
     to = global.getColumnPosition("noteTableAltitudePosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_DATE_CREATED_POSITION);
     to = global.getColumnPosition("noteTableDateCreatedPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_DATE_DELETED_POSITION);
     to = global.getColumnPosition("noteTableDateDeletedPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_DATE_SUBJECT_POSITION);
     to = global.getColumnPosition("noteTableDateSubjectPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_DATE_UPDATED_POSITION);
     to = global.getColumnPosition("noteTableDateUpdatedPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_HAS_ENCRYPTION_POSITION);
     to = global.getColumnPosition("noteTableHasEncryptionPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_HAS_TODO_POSITION);
     to = global.getColumnPosition("noteTableHasTodoPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_IS_DIRTY_POSITION);
     to = global.getColumnPosition("noteTableIsDirtyPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_LATITUDE_POSITION);
     to = global.getColumnPosition("noteTableLatitudePosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_LID_POSITION);
     to = global.getColumnPosition("noteTableLidPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_LONGITUDE_POSITION);
     to = global.getColumnPosition("noteTableLongitudePosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_NOTEBOOK_LID_POSITION);
     to = global.getColumnPosition("noteTableNotebookLidPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_NOTEBOOK_POSITION);
     to = global.getColumnPosition("noteTableNotebookPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_SIZE_POSITION);
     to = global.getColumnPosition("noteTableSizePosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_THUMBNAIL_POSITION);
     to = global.getColumnPosition("noteTableThumbnailPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_SEARCH_RELEVANCE_POSITION);
     to = global.getColumnPosition("noteTableRelevancePosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_SOURCE_APPLICATION_POSITION);
     to = global.getColumnPosition("noteTableSourceApplicationPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_SOURCE_POSITION);
     to = global.getColumnPosition("noteTableSourcePosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_SOURCE_URL_POSITION);
     to = global.getColumnPosition("noteTableSourceUrlPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_TAGS_POSITION);
     to = global.getColumnPosition("noteTableTagsPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_TITLE_POSITION);
     to = global.getColumnPosition("noteTableTitlePosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_REMINDER_TIME_POSITION);
     to = global.getColumnPosition("noteTableReminderTimePosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_REMINDER_TIME_DONE_POSITION);
     to = global.getColumnPosition("noteTableReminderTimeDonePosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 
     from = horizontalHeader()->visualIndex(NOTE_TABLE_REMINDER_ORDER_POSITION);
     to = global.getColumnPosition("noteTableReminderOrderPosition");
-    if (to >= 0) horizontalHeader()->moveSection(from, to);
-
+    if (to >= 0)
+        horizontalHeader()->moveSection(from, to);
 }
 
-
 // Change the size of the columns (used after restarting)
-void NTableView::resizeColumns() {
+void NTableView::resizeColumns()
+{
     int width = global.getColumnWidth("noteTableAltitudePosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_ALTITUDE_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_ALTITUDE_POSITION, width);
 
     width = global.getColumnWidth("noteTableAuthorPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_AUTHOR_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_AUTHOR_POSITION, width);
 
     width = global.getColumnWidth("noteTableDateCreatedPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_DATE_CREATED_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_DATE_CREATED_POSITION, width);
 
     width = global.getColumnWidth("noteTableDateDeletedPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_DATE_DELETED_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_DATE_DELETED_POSITION, width);
 
     width = global.getColumnWidth("noteTableDateSubjectPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_DATE_SUBJECT_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_DATE_SUBJECT_POSITION, width);
 
     width = global.getColumnWidth("noteTableDateUpdatedPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_DATE_UPDATED_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_DATE_UPDATED_POSITION, width);
 
     width = global.getColumnWidth("noteTableHasEncryptionPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_HAS_ENCRYPTION_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_HAS_ENCRYPTION_POSITION, width);
 
     width = global.getColumnWidth("noteTableTodoPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_HAS_TODO_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_HAS_TODO_POSITION, width);
 
     width = global.getColumnWidth("noteTableIsDirtyPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_IS_DIRTY_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_IS_DIRTY_POSITION, width);
 
     width = global.getColumnWidth("noteTableLatitudePosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_LATITUDE_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_LATITUDE_POSITION, width);
 
     width = global.getColumnWidth("noteTableLidPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_LID_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_LID_POSITION, width);
 
     width = global.getColumnWidth("noteTableLongitudePosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_LONGITUDE_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_LONGITUDE_POSITION, width);
 
     width = global.getColumnWidth("noteTableNotebookLidPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_NOTEBOOK_LID_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_NOTEBOOK_LID_POSITION, width);
 
     width = global.getColumnWidth("noteTableNotebookPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_NOTEBOOK_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_NOTEBOOK_POSITION, width);
 
     width = global.getColumnWidth("noteTableSizePosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_SIZE_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_SIZE_POSITION, width);
 
     width = global.getColumnWidth("noteTableSourceApplicationPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_SOURCE_APPLICATION_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_SOURCE_APPLICATION_POSITION, width);
 
     width = global.getColumnWidth("noteTableSourcePosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_SOURCE_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_SOURCE_POSITION, width);
 
     width = global.getColumnWidth("noteTableSourceUrlPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_SOURCE_URL_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_SOURCE_URL_POSITION, width);
 
     width = global.getColumnWidth("noteTableTagsPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_TAGS_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_TAGS_POSITION, width);
 
     width = global.getColumnWidth("noteTableTitlePosition");
-    if (width < 0) {
+    if (width < 0)
+    {
         width = 1200;
     }
     setColumnWidth(NOTE_TABLE_TITLE_POSITION, width);
 
     width = global.getColumnWidth("noteTableThumbnailPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_THUMBNAIL_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_THUMBNAIL_POSITION, width);
 
     width = global.getColumnWidth("noteTableRelevancePosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_SEARCH_RELEVANCE_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_SEARCH_RELEVANCE_POSITION, width);
 
     width = global.getColumnWidth("noteTableReminderTimePosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_REMINDER_TIME_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_REMINDER_TIME_POSITION, width);
 
     width = global.getColumnWidth("noteTableReminderTimeDonePosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_REMINDER_TIME_DONE_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_REMINDER_TIME_DONE_POSITION, width);
 
     width = global.getColumnWidth("noteTableReminderOrderPosition");
-    if (width > 0) setColumnWidth(NOTE_TABLE_REMINDER_ORDER_POSITION, width);
+    if (width > 0)
+        setColumnWidth(NOTE_TABLE_REMINDER_ORDER_POSITION, width);
 }
 
-
 // Combine multiple notes
-void NTableView::createTableOfContents() {
+void NTableView::createTableOfContents()
+{
     QList<qint32> lids;
     getSelectedLids(lids);
     if (lids.size() == 0)
@@ -1355,18 +1463,23 @@ void NTableView::createTableOfContents() {
                    user.shardId + QString("/");
 
     bool unsyncedNote = false;
-    for (int i = 0; i < lids.size(); i++) {
+    for (int i = 0; i < lids.size(); i++)
+    {
         Note n;
         nTable.get(n, lids[i], false, false);
         if (!n.updateSequenceNum.isSet() || n.updateSequenceNum == 0)
             unsyncedNote = true;
         QString href2 = href + n.guid + "/" + n.guid;
-        if (i == 0) {
+        if (i == 0)
+        {
             note.notebookGuid = n.notebookGuid;
         }
-        if (n.tagGuids.isSet()) {
-            for (int j = 0; j < n.tagGuids->size(); j++) {
-                if (!tagGuids.contains(n.tagGuids->at(j))) {
+        if (n.tagGuids.isSet())
+        {
+            for (int j = 0; j < n.tagGuids->size(); j++)
+            {
+                if (!tagGuids.contains(n.tagGuids->at(j)))
+                {
                     tagGuids.append(n.tagGuids->at(j));
                     tagNames.append(n.tagNames->at(j));
                 }
@@ -1387,7 +1500,9 @@ void NTableView::createTableOfContents() {
 
     if (!unsyncedNote || QMessageBox::Yes == QMessageBox(QMessageBox::Warning, "Warning",
                                                          tr("One or more notes are unsynchronized.\nThis can cause issues if they are later synchronized.\nDo you wish to continue?"),
-                                                         QMessageBox::Yes | QMessageBox::No).exec()) {
+                                                         QMessageBox::Yes | QMessageBox::No)
+                                                 .exec())
+    {
         qint32 lid = nTable.add(0, note, true, 0);
         FilterEngine engine;
         engine.filter();
@@ -1410,9 +1525,9 @@ void NTableView::createTableOfContents() {
     }
 }
 
-
 // Combine multiple notes
-void NTableView::mergeNotes() {
+void NTableView::mergeNotes()
+{
     QList<qint32> lids;
     getSelectedLids(lids);
     if (lids.size() == 0)
@@ -1431,11 +1546,13 @@ void NTableView::mergeNotes() {
 
     // Duplicate the source notes so we can undelete them later if something
     // goes horribly wrong
-    for (int i = 1; i < lids.size(); i++) {
+    for (int i = 1; i < lids.size(); i++)
+    {
         qint32 newLid = nTable.duplicateNote(lids[i]);
         QList<qint32> resLids;
         rTable.getResourceList(resLids, newLid);
-        for (int j = 0; j < resLids.size(); j++) {
+        for (int j = 0; j < resLids.size(); j++)
+        {
             rTable.updateNoteLid(resLids[j], lid);
         }
 
@@ -1462,9 +1579,9 @@ void NTableView::mergeNotes() {
     emit(refreshNoteContent(lid));
 }
 
-
 // Pin notes
-void NTableView::pinNote() {
+void NTableView::pinNote()
+{
     QList<qint32> lids;
     ConfigStore cs(global.db);
     getSelectedLids(lids);
@@ -1472,7 +1589,8 @@ void NTableView::pinNote() {
         return;
 
     NoteTable noteTable(global.db);
-    for (int i = 0; i < lids.size(); i++) {
+    for (int i = 0; i < lids.size(); i++)
+    {
         noteTable.pinNote(lids[i], true);
     }
     FilterEngine engine;
@@ -1480,9 +1598,9 @@ void NTableView::pinNote() {
     refreshData();
 }
 
-
 // Unpin notes
-void NTableView::unpinNote() {
+void NTableView::unpinNote()
+{
     QList<qint32> lids;
     ConfigStore cs(global.db);
     getSelectedLids(lids);
@@ -1490,7 +1608,8 @@ void NTableView::unpinNote() {
         return;
 
     NoteTable noteTable(global.db);
-    for (int i = 0; i < lids.size(); i++) {
+    for (int i = 0; i < lids.size(); i++)
+    {
         noteTable.pinNote(lids[i], false);
     }
     FilterEngine engine;
@@ -1498,47 +1617,54 @@ void NTableView::unpinNote() {
     refreshData();
 }
 
-
 // Drag a note event.  Determine if dragging is even possible
-void NTableView::dragEnterEvent(QDragEnterEvent *event) {
-    if (event->source() == this) {
+void NTableView::dragEnterEvent(QDragEnterEvent *event)
+{
+    if (event->source() == this)
+    {
         event->ignore();
         return;
     }
-    if (event->mimeData()->hasFormat("application/x-nixnote-note")) {
+    if (event->mimeData()->hasFormat("application/x-nixnote-note"))
+    {
         event->accept();
         return;
     }
     event->ignore();
 }
 
-
-void NTableView::dragLeaveEvent(QDragLeaveEvent *event) {
+void NTableView::dragLeaveEvent(QDragLeaveEvent *event)
+{
     QTableView::dragLeaveEvent(event);
 }
 
-void NTableView::dropEvent(QDropEvent *event) {
+void NTableView::dropEvent(QDropEvent *event)
+{
     QTableView::dropEvent(event);
 }
 
-
 // Accept the drag move event if possible
-void NTableView::dragMoveEvent(QDragMoveEvent *event) {
+void NTableView::dragMoveEvent(QDragMoveEvent *event)
+{
     QTableView::dragMoveEvent(event);
 }
 
-void NTableView::mousePressEvent(QMouseEvent *event) {
+void NTableView::mousePressEvent(QMouseEvent *event)
+{
     dragStartIndex = this->indexAt(event->pos());
     QTableView::mousePressEvent(event);
 }
 
 // Procees mouse move events
-void NTableView::mouseMoveEvent(QMouseEvent *event) {
-    if (!(event->buttons() & Qt::LeftButton)) {
+void NTableView::mouseMoveEvent(QMouseEvent *event)
+{
+    if (!(event->buttons() & Qt::LeftButton))
+    {
         event->ignore();
         return;
     }
-    if (dragStartIndex.row() == this->indexAt(event->pos()).row()) {
+    if (dragStartIndex.row() == this->indexAt(event->pos()).row())
+    {
         event->ignore();
         return;
     }
@@ -1552,7 +1678,8 @@ void NTableView::mouseMoveEvent(QMouseEvent *event) {
     QMimeData *mimeData = new QMimeData;
 
     QByteArray ba;
-    for (int i = 0; i < lids.size(); i++) {
+    for (int i = 0; i < lids.size(); i++)
+    {
         ba.append(QString().number(lids[i]) + " ");
     }
     mimeData->setData("application/x-nixnote-note", ba);
@@ -1560,22 +1687,23 @@ void NTableView::mouseMoveEvent(QMouseEvent *event) {
     drag->exec(Qt::MoveAction);
 }
 
-
-void NTableView::openNoteExternalWindowTriggered() {
+void NTableView::openNoteExternalWindowTriggered()
+{
     QList<qint32> lids;
     getSelectedLids(lids);
-    for (int i = 0; i < lids.size(); i++) {
+    for (int i = 0; i < lids.size(); i++)
+    {
         emit(openNoteExternalWindow(lids[i]));
     }
 }
 
-
-void NTableView::openNoteNewTabTriggered() {
+void NTableView::openNoteNewTabTriggered()
+{
     this->openSelectedLids(true);
 }
 
-
-void NTableView::createNewNote() {
+void NTableView::createNewNote()
+{
     emit(newNote());
 }
 
@@ -1597,55 +1725,58 @@ void NTableView::setTitleColorCyan() { setTitleColor("cyan"); }
 
 void NTableView::setTitleColorMagenta() { setTitleColor("magenta"); }
 
-void NTableView::setTitleColor(QString color) {
+void NTableView::setTitleColor(QString color)
+{
     QList<qint32> lids;
     getSelectedLids(lids);
     QString value = color;
     if (color == "white")
         value = "";
     NoteTable ntable(global.db);
-    for (int i = 0; i < lids.size(); i++) {
+    for (int i = 0; i < lids.size(); i++)
+    {
         refreshCell(lids[i], NOTE_TABLE_COLOR_POSITION, value);
         ntable.setTitleColor(lids[i], value);
     }
 }
 
-
-void NTableView::noteTagsUpdated(QString uuid, qint32 lid, QStringList names) {
+void NTableView::noteTagsUpdated(QString uuid, qint32 lid, QStringList names)
+{
     Q_UNUSED(uuid);
     QString value = "";
-    for (int i = 0; i < names.size(); i++) {
+    for (int i = 0; i < names.size(); i++)
+    {
         value = value + names[i];
         if (names.size() > i + 1)
             value = value + ",";
     }
     this->refreshCell(lid, NOTE_TABLE_TAGS_POSITION, QVariant(value));
-
 }
 
-
-void NTableView::noteNotebookUpdated(QString uuid, qint32 lid, QString name) {
+void NTableView::noteNotebookUpdated(QString uuid, qint32 lid, QString name)
+{
     Q_UNUSED(uuid);
     this->refreshCell(lid, NOTE_TABLE_NOTEBOOK_POSITION, QVariant(name));
-
 }
 
-
-void NTableView::downNote() {
+void NTableView::downNote()
+{
     QKeyEvent *event = new QKeyEvent(QEvent::KeyPress, Qt::Key_Down, Qt::NoModifier);
     QCoreApplication::postEvent(this, event);
 }
 
-void NTableView::upNote() {
+void NTableView::upNote()
+{
     QKeyEvent *event = new QKeyEvent(QEvent::KeyPress, Qt::Key_Up, Qt::NoModifier);
     QCoreApplication::postEvent(this, event);
 }
 
-
-void NTableView::showPropertiesDialog() {
+void NTableView::showPropertiesDialog()
+{
     NoteProperties prop;
     QModelIndexList l = selectedIndexes();
-    if (l.size() > 0) {
+    if (l.size() > 0)
+    {
         QString currentLid = l.at(0).sibling(l.at(0).row(), NOTE_TABLE_LID_POSITION).data().toString();
         QString title = l.at(0).sibling(l.at(0).row(), NOTE_TABLE_TITLE_POSITION).data().toString();
         QString notebook = l.at(0).sibling(l.at(0).row(), NOTE_TABLE_NOTEBOOK_POSITION).data().toString();
@@ -1660,7 +1791,6 @@ void NTableView::showPropertiesDialog() {
         QString sourceAppl = l.at(0).sibling(l.at(0).row(), NOTE_TABLE_SOURCE_APPLICATION_POSITION).data().toString();
         QString source = l.at(0).sibling(l.at(0).row(), NOTE_TABLE_SOURCE_POSITION).data().toString();
         QString sourceURL = l.at(0).sibling(l.at(0).row(), NOTE_TABLE_SOURCE_URL_POSITION).data().toString();
-
 
         QDateTime dateCreated;
         dateCreated.setTime_t(
@@ -1715,27 +1845,29 @@ void NTableView::showPropertiesDialog() {
             prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(tr("No")));
 
         prop.tableWidget->setItem(row, col++, new QTableWidgetItem(tr("Date Created")));
-        prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(
-            dateCreated.toString(global.getDateTimeFormat())));
+        prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(dateCreated.toString(global.getDateTimeFormat())));
 
         prop.tableWidget->setItem(row, col++, new QTableWidgetItem(tr("Date Updated")));
-        prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(
-            dateUpdated.toString(global.getDateTimeFormat())));
+        prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(dateUpdated.toString(global.getDateTimeFormat())));
 
         prop.tableWidget->setItem(row, col++, new QTableWidgetItem(tr("Date Deleted")));
-        if (dateDeleted.toMSecsSinceEpoch() > 0) {
-            prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(
-                dateDeleted.toString(global.getDateTimeFormat())));
-        } else {
+        if (dateDeleted.toMSecsSinceEpoch() > 0)
+        {
+            prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(dateDeleted.toString(global.getDateTimeFormat())));
+        }
+        else
+        {
             col--;
             row++;
         }
 
         prop.tableWidget->setItem(row, col++, new QTableWidgetItem(tr("Subject Date")));
-        if (dateSubject.toMSecsSinceEpoch() > 0) {
-            prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(
-                dateSubject.toString(global.getDateTimeFormat())));
-        } else {
+        if (dateSubject.toMSecsSinceEpoch() > 0)
+        {
+            prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(dateSubject.toString(global.getDateTimeFormat())));
+        }
+        else
+        {
             col--;
             row++;
         }
@@ -1743,33 +1875,38 @@ void NTableView::showPropertiesDialog() {
         prop.tableWidget->setItem(row, col++, new QTableWidgetItem(tr("Author")));
         prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(author));
 
-
         prop.tableWidget->setItem(row, col++, new QTableWidgetItem(tr("Longitude")));
-        if (longitude > 0) {
+        if (longitude > 0)
+        {
             prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(longitude));
-        } else {
+        }
+        else
+        {
             col--;
             row++;
         }
-
 
         prop.tableWidget->setItem(row, col++, new QTableWidgetItem(tr("Latitude")));
-        if (latitude > 0) {
+        if (latitude > 0)
+        {
             prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(latitude));
-        } else {
+        }
+        else
+        {
             col--;
             row++;
         }
-
 
         prop.tableWidget->setItem(row, col++, new QTableWidgetItem(tr("Altitude")));
-        if (altitude > 0) {
+        if (altitude > 0)
+        {
             prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(altitude));
-        } else {
+        }
+        else
+        {
             col--;
             row++;
         }
-
 
         prop.tableWidget->setItem(row, col++, new QTableWidgetItem(tr("Source")));
         prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(source));
@@ -1781,19 +1918,23 @@ void NTableView::showPropertiesDialog() {
         prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(sourceURL));
 
         prop.tableWidget->setItem(row, col++, new QTableWidgetItem(tr("Reminder Due")));
-        if (reminderDue.toMSecsSinceEpoch() > 0) {
-            prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(
-                reminderDue.toString(global.getDateTimeFormat())));
-        } else {
+        if (reminderDue.toMSecsSinceEpoch() > 0)
+        {
+            prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(reminderDue.toString(global.getDateTimeFormat())));
+        }
+        else
+        {
             col--;
             row++;
         }
 
         prop.tableWidget->setItem(row, col++, new QTableWidgetItem(tr("Reminder Completed")));
-        if (reminderCompleted.toMSecsSinceEpoch() > 0) {
-            prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(
-                reminderCompleted.toString(global.getDateTimeFormat())));
-        } else {
+        if (reminderCompleted.toMSecsSinceEpoch() > 0)
+        {
+            prop.tableWidget->setItem(row++, col--, new QTableWidgetItem(reminderCompleted.toString(global.getDateTimeFormat())));
+        }
+        else
+        {
             col--;
             row++;
         }
@@ -1804,8 +1945,8 @@ void NTableView::showPropertiesDialog() {
     }
 }
 
-
-void NTableView::markReminderCompleted() {
+void NTableView::markReminderCompleted()
+{
     // Make sure we save whatever we are currently viewing
     emit saveAllNotes();
 
@@ -1815,7 +1956,8 @@ void NTableView::markReminderCompleted() {
         return;
 
     NoteTable ntable(global.db);
-    for (int i = 0; i < lids.size(); i++) {
+    for (int i = 0; i < lids.size(); i++)
+    {
         int sourceRow = proxy->lidMap->value(lids[i]);
         QModelIndex sourceIndex = model()->index(sourceRow, NOTE_TABLE_REMINDER_TIME_POSITION);
         qlonglong value = sourceIndex.data().toLongLong();
@@ -1828,8 +1970,8 @@ void NTableView::markReminderCompleted() {
     refreshData();
 }
 
-
-void NTableView::removeReminder() {
+void NTableView::removeReminder()
+{
     // Make sure we save whatever we are currently viewing
     emit saveAllNotes();
 
@@ -1839,7 +1981,8 @@ void NTableView::removeReminder() {
         return;
 
     NoteTable ntable(global.db);
-    for (int i = 0; i < lids.size(); i++) {
+    for (int i = 0; i < lids.size(); i++)
+    {
         ntable.removeReminder(lids[i]);
     }
     FilterEngine engine;
